@@ -1,3 +1,9 @@
 # Ecplise files
 .classpath
 .project
+
+# Class files
+bin/*
+
+# IO files
+io-files/*
