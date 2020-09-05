@@ -45,7 +45,7 @@ public class Terrain {
 	// convert height values to greyscale colour and populate an image
 	void deriveImage()
 	{
-		img = new BufferedImage(dimy, dimx, BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(dimx, dimy, BufferedImage.TYPE_INT_ARGB);
 		float maxh = -10000.0f, minh = 10000.0f;
 
 		// determine range of heights
