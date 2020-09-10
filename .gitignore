@@ -1,6 +1,6 @@
-# Ecplise files
-.classpath
+# Eclipse files
 .project
+.classpath
 
 # Class files
 bin/*
