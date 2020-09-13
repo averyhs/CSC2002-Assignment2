@@ -38,11 +38,12 @@ public class FlowPanel extends JPanel implements Runnable, MouseListener {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		System.out.println("Mouse Clicked at "+e.getX()+", "+e.getY());
-		water.add(e.getX(), e.getY());
-		repaint();
-		
-		// TODO: catch error for clicking off panel
+		try {
+			System.out.println("Mouse Clicked at "+e.getX()+", "+e.getY());
+			water.add(e.getX(), e.getY());
+			repaint();
+		}
+		catch (ArrayIndexOutOfBoundsException err) {} // do nothing
 	}
 	
 	@Override
