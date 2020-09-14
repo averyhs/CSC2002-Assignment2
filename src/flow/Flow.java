@@ -25,11 +25,13 @@ public class Flow {
 
 	public static void setupGUI(int frameX,int frameY,Terrain landdata) {
 
+		// ** Window **
 		Dimension fsize = new Dimension(800, 800);
 		JFrame frame = new JFrame("Waterflow"); 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
 
+		// ** Image panel **
 		JPanel g = new JPanel();
 		g.setLayout(new BoxLayout(g, BoxLayout.PAGE_AXIS)); 
 
@@ -39,18 +41,35 @@ public class Flow {
 
 		// to do: add a MouseListener, buttons and ActionListeners on those buttons
 
-		JPanel b = new JPanel();
-		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
-		JButton endB = new JButton("End");;
-		// add the listener to the jbutton to handle the "pressed" event
-		endB.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				// to do ask threads to stop
+		// ** Buttons **
+		
+		// "End" ends program when pressed
+		JButton endB = new JButton("End");
+		endB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// TODO: ask threads to stop
 				frame.dispose();
 			}
 		});
-
+		
+		// "Clear" clears water from terrain when pressed
+		JButton clearB = new JButton("Clear");
+		clearB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				fp.clear();
+			}
+		});
+		
+		// ** Button panel **
+		JPanel b = new JPanel();
+		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
+		// Add buttons to panel
+		b.add(Box.createHorizontalGlue());
 		b.add(endB);
+		b.add(Box.createHorizontalGlue());
+		b.add(clearB);
+		b.add(Box.createHorizontalGlue());
+		// Add panel to frame
 		g.add(b);
 
 		frame.setSize(frameX, frameY+50);	// a little extra space at the bottom for buttons

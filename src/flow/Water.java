@@ -21,6 +21,11 @@ public class Water {
 		return img;
 	}
 	
+	void resetImage() {
+		// transparent image, size of terrain
+		img = new BufferedImage(dimx, dimy, BufferedImage.TYPE_INT_ARGB);
+	}
+	
 	void add(int x, int y) {
 		// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
 		// solid blue: A=255 R=0 G=0 B=255 

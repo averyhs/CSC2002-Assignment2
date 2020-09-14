@@ -45,6 +45,11 @@ public class FlowPanel extends JPanel implements Runnable {
 		}
 	}
 
+	void clear() {
+		water.resetImage();
+		repaint();
+	}
+	
 	public void run() {
 		// display loop here
 		// to do: this should be controlled by the GUI
