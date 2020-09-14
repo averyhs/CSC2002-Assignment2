@@ -17,7 +17,8 @@ public class FlowPanel extends JPanel implements Runnable {
 		addMouseListener(new MouseAdapter() { 
 			public void mouseClicked(MouseEvent me) { 
 				try {
-					water.add(me.getX(), me.getY());
+					water.flow(1, me.getX(), me.getY());
+					water.color(me.getX(), me.getY());
 					repaint();
 				}
 				catch (ArrayIndexOutOfBoundsException err) {} // do nothing
@@ -46,7 +47,7 @@ public class FlowPanel extends JPanel implements Runnable {
 	}
 
 	void clear() {
-		water.resetImage();
+		water.reset();
 		repaint();
 	}
 	
