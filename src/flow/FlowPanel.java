@@ -14,10 +14,9 @@ public class FlowPanel extends JPanel{
 	static final int DROP_DEPTH = 1;
 
 	FlowPanel(Terrain terrain) {
-		land = terrain;
-		water = new Water(land);
-		
-		sim = new Simulate(land.dim());
+		land = terrain; // get terrain
+		water = new Water(land); // initialize water
+		land.genPermute(); // generate permuted list in land
 
 		// Mouse listener adds water where user clicks
 		addMouseListener(new MouseAdapter() { 
@@ -34,8 +33,8 @@ public class FlowPanel extends JPanel{
 	}
 
 	void sim() {
-		land.genPermute();
-		sim.run();
+		Thread sim = new Simulate(land.dim());
+		sim.start();
 	}
 	
 	// responsible for painting the terrain and water
