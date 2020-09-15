@@ -9,6 +9,9 @@ public class FlowPanel extends JPanel{
 	Terrain land;
 	Water water;
 	Simulate sim;
+	
+	static final int DROP_SIZE = 3;
+	static final int DROP_DEPTH = 1;
 
 	FlowPanel(Terrain terrain) {
 		land = terrain;
@@ -20,8 +23,9 @@ public class FlowPanel extends JPanel{
 		addMouseListener(new MouseAdapter() { 
 			public void mouseClicked(MouseEvent me) { 
 				try {
-					water.flow(1, me.getX(), me.getY());
-					water.color(me.getX(), me.getY());
+					water.add(me.getX(), me.getY(), DROP_DEPTH, DROP_SIZE);
+					//water.flow(1, me.getX(), me.getY());
+					//water.color(me.getX(), me.getY());
 					repaint();
 				}
 				catch (ArrayIndexOutOfBoundsException err) {} // do nothing

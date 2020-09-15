@@ -50,6 +50,15 @@ public class Water {
 		}
 	}
 	
+	void add(int x, int y, int d, int s) {
+		for (int i=-s; i<=s; i++) {
+			for (int j=-s; j<=s; j++) {
+				depth[x+i][y+j] = d;
+				color(x+i,y+j);
+			}
+		}
+	}
+	
 	void color(int x, int y) {
 		// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
 		if(depth[x][y]==0) {
