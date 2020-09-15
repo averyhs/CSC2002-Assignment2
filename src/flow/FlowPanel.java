@@ -85,8 +85,8 @@ public class FlowPanel extends JPanel{
 				if ( // conditions for points on boundary
 						curr[0]==0 ||
 						curr[1]==0 ||
-						curr[0]==land.getDimX() ||
-						curr[1]==land.getDimY()
+						curr[0]==land.getDimX()-1 ||
+						curr[1]==land.getDimY()-1
 					) {
 					water.flow(0, curr[0], curr[1]);
 					water.color(curr[0], curr[1]);
