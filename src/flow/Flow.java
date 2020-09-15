@@ -60,6 +60,14 @@ public class Flow {
 			}
 		});
 		
+		// "Play" starts simulation
+		JButton playB = new JButton("Play");
+		playB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				fp.sim();
+			}
+		});
+		
 		// ** Button panel **
 		JPanel b = new JPanel();
 		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
@@ -69,6 +77,8 @@ public class Flow {
 		b.add(Box.createHorizontalGlue());
 		b.add(clearB);
 		b.add(Box.createHorizontalGlue());
+		b.add(playB);
+		b.add(Box.createHorizontalGlue());
 		// Add panel to frame
 		g.add(b);
 
@@ -77,8 +87,8 @@ public class Flow {
 		frame.add(g); //add contents to window
 		frame.setContentPane(g);
 		frame.setVisible(true);
-		Thread fpt = new Thread(fp);
-		fpt.start();
+		//Thread fpt = new Thread(fp);
+		//fpt.start();
 	}
 
 
@@ -101,5 +111,7 @@ public class Flow {
 		SwingUtilities.invokeLater(()->setupGUI(frameX, frameY, landdata));
 
 		// to do: initialise and start simulation
+		
+		//System.out.println("fp: "+fp);
 	}
 }

@@ -39,8 +39,15 @@ public class Water {
 	}
 	
 	// change depth at a point
+	// change param can be +ve or -ve, will be added to current depth
+	// if change is 0, depth will be set to zero.
 	void flow(int change, int x, int y) {
-		depth[x][y] += change;
+		if (change==0) {
+			depth[x][y] = 0;
+		}
+		else {
+			depth[x][y] += change;
+		}
 	}
 	
 	void color(int x, int y) {
