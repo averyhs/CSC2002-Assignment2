@@ -2,6 +2,8 @@ package flow;
 
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.awt.event.MouseAdapter;
 import javax.swing.JPanel;
 
@@ -9,25 +11,34 @@ public class FlowPanel extends JPanel{
 	Terrain land;
 	Water water;
 	
-	Thread[] sim;
+	List<Thread> sim;
 
 	static final int NUM_THREADS = 1;
 	static final int DROP_SIZE = 3;
 	static final int DROP_DEPTH = 1;
 
-	volatile boolean cancelled;
-	boolean threadsWaiting;
-
+	volatile boolean ended;
+	volatile boolean paused;
+	
+	boolean startup;
+	
 	FlowPanel(Terrain terrain) {
 		land = terrain; // get terrain
 		water = new Water(land); // initialize water
 		land.genPermute(); // generate permuted list in land
 		
-		sim = new Thread[NUM_THREADS];
+		sim = new ArrayList<Thread>();
 		
-		cancelled = false;
-		threadsWaiting = false;
-
+		ended = false;
+		paused = false;
+		
+		startup = true;
+		
+		// create threads
+		for (int t=0; t<NUM_THREADS; t++) {
+			sim.add(new Thread(new Simulate(land.dim())));
+		}
+		
 		// Mouse listener adds water where user clicks
 		addMouseListener(new MouseAdapter() { 
 			public void mouseClicked(MouseEvent me) { 
@@ -41,48 +52,29 @@ public class FlowPanel extends JPanel{
 			} 
 		});
 	}
-
-	void sim() {
-		cancelled = false;
-		for (int t=0; t<NUM_THREADS; t++) {
-			sim[t] = new Thread(new Simulate(land.dim()));
-			sim[t].start();
-		}
+	
+	void end() {
+		ended = true;
 	}
 	
-	void clear() {
-		cancel();
+	void reset() {
 		water.reset();
+		paused = true;
 		repaint();
-	}
-
-	void cancel() {
-		cancelled = true;
 	}
 	
 	void pause() {
-		try {
-			for (int t=0; t<NUM_THREADS; t++) {
-				sim[t].wait();
-			}
-			threadsWaiting = true;
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		catch (NullPointerException e) {
-			System.out.println("Null pointer to sim thread");
-			e.printStackTrace();
-		}
+		paused = true;
 	}
 	
-	void resume() {
-		if (threadsWaiting) {
-			for (int t=0; t<NUM_THREADS; t++) {
-				sim[t].notify();
+	void play() {
+		if (startup) {
+			for (Thread t : sim) {
+				t.start();
 			}
-			threadsWaiting = false; // all should be notified at once
+			startup = false;
 		}
+		paused = false;
 	}
 
 	// responsible for painting the terrain and water
@@ -121,38 +113,43 @@ public class FlowPanel extends JPanel{
 			int[] curr = new int[2]; // coords of this pt
 			int[] next = new int[2]; // coords of pt water goes to
 
-			while(!cancelled) {
-				for(int i=0; i<numPts; i++) {
-					land.getPermute(i, curr);
-
-					if ( // conditions for points on boundary
-							curr[0]==0 ||
-							curr[1]==0 ||
-							curr[0]==land.getDimX()-1 ||
-							curr[1]==land.getDimY()-1
-							) {
-						water.flow(0, curr[0], curr[1]);
-						water.color(curr[0], curr[1]);
-						continue;
-					}
-
-					if (water.depth[curr[0]][curr[1]] != 0) {
-						findLowest(curr[0], curr[1], next);
-						if (next[0]<0) continue; // no water flow
-						water.flow(-1, curr[0], curr[1]); // water out
-						water.flow(1, next[0], next[1]); // water in
-
-						// update color
-						water.color(curr[0], curr[1]);
-						water.color(next[0], next[1]);
-					}
+			while(!ended) {
+				if (paused) {
+					continue;
 				}
-				repaint();
+				else {
+					for(int i=0; i<numPts; i++) {
+						land.getPermute(i, curr);
+
+						if ( // conditions for points on boundary
+								curr[0]==0 ||
+								curr[1]==0 ||
+								curr[0]==land.getDimX()-1 ||
+								curr[1]==land.getDimY()-1
+								) {
+							water.flow(0, curr[0], curr[1]);
+							water.color(curr[0], curr[1]);
+							continue;
+						}
+
+						if (water.depth[curr[0]][curr[1]] != 0) {
+							findLowest(curr[0], curr[1], next);
+							if (next[0]<0) continue; // no water flow
+							water.flow(-1, curr[0], curr[1]); // water out
+							water.flow(1, next[0], next[1]); // water in
+
+							// update color
+							water.color(curr[0], curr[1]);
+							water.color(next[0], next[1]);
+						}
+					}
+					repaint();
+				}
 			}
 		}
 
 		// find lowest neighboring point
-		// set param c to coords of lowest pt
+		// sets param c to coords of lowest pt
 		// negative values indicate that none are lower
 		private void findLowest(int x, int y, int[] c) {
 

@@ -12,8 +12,6 @@ public class Flow {
 	static int frameX;
 	static int frameY;
 	static FlowPanel fp;
-	
-	static boolean isReset = true;
 
 	// start timer
 	private static void tick(){
@@ -49,17 +47,18 @@ public class Flow {
 		JButton endB = new JButton("End");
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				fp.cancel();
+				fp.end();
 				frame.dispose();
+				// There's only one frame, so can just call exit
+				//System.exit(0);
 			}
 		});
 		
-		// "Clear" clears water from terrain when pressed
-		JButton clearB = new JButton("Clear");
-		clearB.addActionListener(new ActionListener() {
+		// "Reset" resets simulation
+		JButton resetB = new JButton("Reset");
+		resetB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				fp.clear();
-				isReset = true;
+				fp.reset();
 			}
 		});
 		
@@ -67,13 +66,15 @@ public class Flow {
 		JButton playB = new JButton("Play");
 		playB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (isReset) {
-					fp.sim();
-					isReset = false;
-				}
-				else {
-					fp.resume();
-				}
+				fp.play();
+			}
+		});
+		
+		// "Pause" pauses simulation
+		JButton pauseB = new JButton("Pause");
+		pauseB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				fp.pause();
 			}
 		});
 		
@@ -82,11 +83,13 @@ public class Flow {
 		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
 		// Add buttons to panel
 		b.add(Box.createHorizontalGlue());
-		b.add(endB);
+		b.add(resetB);
 		b.add(Box.createHorizontalGlue());
-		b.add(clearB);
+		b.add(pauseB);
 		b.add(Box.createHorizontalGlue());
 		b.add(playB);
+		b.add(Box.createHorizontalGlue());
+		b.add(endB);
 		b.add(Box.createHorizontalGlue());
 		// Add panel to frame
 		g.add(b);
