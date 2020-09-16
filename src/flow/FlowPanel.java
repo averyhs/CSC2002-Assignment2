@@ -8,15 +8,25 @@ import javax.swing.JPanel;
 public class FlowPanel extends JPanel{
 	Terrain land;
 	Water water;
-	Simulate sim;
 	
+	Thread[] sim;
+
+	static final int NUM_THREADS = 1;
 	static final int DROP_SIZE = 3;
 	static final int DROP_DEPTH = 1;
+
+	volatile boolean cancelled;
+	boolean threadsWaiting;
 
 	FlowPanel(Terrain terrain) {
 		land = terrain; // get terrain
 		water = new Water(land); // initialize water
 		land.genPermute(); // generate permuted list in land
+		
+		sim = new Thread[NUM_THREADS];
+		
+		cancelled = false;
+		threadsWaiting = false;
 
 		// Mouse listener adds water where user clicks
 		addMouseListener(new MouseAdapter() { 
@@ -33,10 +43,48 @@ public class FlowPanel extends JPanel{
 	}
 
 	void sim() {
-		Thread sim = new Simulate(land.dim());
-		sim.start();
+		cancelled = false;
+		for (int t=0; t<NUM_THREADS; t++) {
+			sim[t] = new Simulate(land.dim());
+			sim[t].start();
+		}
 	}
 	
+	void clear() {
+		cancel();
+		water.reset();
+		repaint();
+	}
+
+	void cancel() {
+		cancelled = true;
+	}
+	
+	void pause() {
+		try {
+			for (int t=0; t<NUM_THREADS; t++) {
+				sim[t].wait();
+			}
+			threadsWaiting = true;
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		catch (NullPointerException e) {
+			System.out.println("Null pointer to sim thread");
+			e.printStackTrace();
+		}
+	}
+	
+	void resume() {
+		if (threadsWaiting) {
+			for (int t=0; t<NUM_THREADS; t++) {
+				sim[t].notify();
+			}
+			threadsWaiting = false; // all should be notified at once
+		}
+	}
+
 	// responsible for painting the terrain and water
 	// as images
 	@Override
@@ -57,64 +105,61 @@ public class FlowPanel extends JPanel{
 		}
 	}
 
-	void clear() {
-		water.reset();
-		repaint();
-	}
-	
 	class Simulate extends Thread {
-		
+
 		int numPts; // number of points to operate on
-		
+
 		Simulate(int n) {
 			numPts = n;
 		}
-		
+
 		// must call genpermute first
 		@Override
 		public void run() {
-			
+
 			// TODO: check genpermute has been called
-			
+
 			int[] curr = new int[2]; // coords of this pt
 			int[] next = new int[2]; // coords of pt water goes to
-			
-			for(int i=0; i<numPts; i++) {
-				land.getPermute(i, curr);
-				
-				if ( // conditions for points on boundary
-						curr[0]==0 ||
-						curr[1]==0 ||
-						curr[0]==land.getDimX()-1 ||
-						curr[1]==land.getDimY()-1
-					) {
-					water.flow(0, curr[0], curr[1]);
-					water.color(curr[0], curr[1]);
-					continue;
+
+			while(!cancelled) {
+				for(int i=0; i<numPts; i++) {
+					land.getPermute(i, curr);
+
+					if ( // conditions for points on boundary
+							curr[0]==0 ||
+							curr[1]==0 ||
+							curr[0]==land.getDimX()-1 ||
+							curr[1]==land.getDimY()-1
+							) {
+						water.flow(0, curr[0], curr[1]);
+						water.color(curr[0], curr[1]);
+						continue;
+					}
+
+					if (water.depth[curr[0]][curr[1]] != 0) {
+						findLowest(curr[0], curr[1], next);
+						if (next[0]<0) continue; // no water flow
+						water.flow(-1, curr[0], curr[1]); // water out
+						water.flow(1, next[0], next[1]); // water in
+
+						// update color
+						water.color(curr[0], curr[1]);
+						water.color(next[0], next[1]);
+					}
 				}
-				
-				if (water.depth[curr[0]][curr[1]] != 0) {
-					findLowest(curr[0], curr[1], next);
-					if (next[0]<0) continue; // no water flow
-					water.flow(-1, curr[0], curr[1]); // water out
-					water.flow(1, next[0], next[1]); // water in
-					
-					// update color
-					water.color(curr[0], curr[1]);
-					water.color(next[0], next[1]);
-				}
+				repaint();
 			}
-			repaint();
 		}
-		
+
 		// find lowest neighboring point
 		// set param c to coords of lowest pt
 		// negative values indicate that none are lower
 		private void findLowest(int x, int y, int[] c) {
-			
+
 			// set initial min to surface of current point
 			float min = land.height[x][y] + 0.01f*water.depth[x][y];
-			
+
 			// surrounding surface values
 			float[] s = {
 					land.height[x-1][y-1] + 0.01f*water.depth[x-1][y-1],
@@ -126,9 +171,9 @@ public class FlowPanel extends JPanel{
 					land.height[x+1][y] + 0.01f*water.depth[x+1][y],
 					land.height[x+1][y+1] + 0.01f*water.depth[x+1][y+1]
 			}; // order: top to bottom, left to right
-			
+
 			int idxMin = -1; // index in s of min value
-			
+
 			// find min
 			for (int i=0; i<8; i++) {
 				if (s[i] < min) {
@@ -141,7 +186,7 @@ public class FlowPanel extends JPanel{
 			 * idx should never be on terrain boundary,
 			 * because boundaries are dealt with separately in run()
 			 */
-			
+
 			// set coords corresponding to min surface
 			switch (idxMin) {
 			case 0:
@@ -182,7 +227,7 @@ public class FlowPanel extends JPanel{
 				break;
 			}
 		}
-		
+
 	} // end Simulate class
-	
+
 }

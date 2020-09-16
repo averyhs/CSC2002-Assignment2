@@ -12,6 +12,8 @@ public class Flow {
 	static int frameX;
 	static int frameY;
 	static FlowPanel fp;
+	
+	static boolean isReset = true;
 
 	// start timer
 	private static void tick(){
@@ -47,7 +49,7 @@ public class Flow {
 		JButton endB = new JButton("End");
 		endB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				// TODO: ask threads to stop
+				fp.cancel();
 				frame.dispose();
 			}
 		});
@@ -57,6 +59,7 @@ public class Flow {
 		clearB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				fp.clear();
+				isReset = true;
 			}
 		});
 		
@@ -64,7 +67,13 @@ public class Flow {
 		JButton playB = new JButton("Play");
 		playB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				fp.sim();
+				if (isReset) {
+					fp.sim();
+					isReset = false;
+				}
+				else {
+					fp.resume();
+				}
 			}
 		});
 		
