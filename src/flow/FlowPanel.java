@@ -45,7 +45,7 @@ public class FlowPanel extends JPanel{
 	void sim() {
 		cancelled = false;
 		for (int t=0; t<NUM_THREADS; t++) {
-			sim[t] = new Simulate(land.dim());
+			sim[t] = new Thread(new Simulate(land.dim()));
 			sim[t].start();
 		}
 	}
@@ -105,7 +105,7 @@ public class FlowPanel extends JPanel{
 		}
 	}
 
-	class Simulate extends Thread {
+	class Simulate implements Runnable {
 
 		int numPts; // number of points to operate on
 
@@ -114,7 +114,6 @@ public class FlowPanel extends JPanel{
 		}
 
 		// must call genpermute first
-		@Override
 		public void run() {
 
 			// TODO: check genpermute has been called
