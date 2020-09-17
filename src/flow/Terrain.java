@@ -81,6 +81,13 @@ public class Terrain {
 	void getPermute(int i, int [] loc) {
 		locate(permute.get(i), loc);
 	}
+	
+	// check that permute has been initialized
+	void checkPermute() throws NullPointerException {
+		if (permute == null) {
+			throw new NullPointerException();
+		}
+	}
 
 	// read in terrain from file
 	void readData(String fileName){ 

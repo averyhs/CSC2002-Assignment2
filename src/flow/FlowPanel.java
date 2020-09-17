@@ -108,8 +108,6 @@ public class FlowPanel extends JPanel{
 		// must call genpermute first
 		public void run() {
 
-			// TODO: check genpermute has been called
-
 			int[] curr = new int[2]; // coords of this pt
 			int[] next = new int[2]; // coords of pt water goes to
 
@@ -119,8 +117,15 @@ public class FlowPanel extends JPanel{
 				}
 				else {
 					for(int i=0; i<numPts; i++) {
-						land.getPermute(i, curr);
-
+						try {
+							land.getPermute(i, curr);
+						}
+						catch(NullPointerException e) {
+							System.out.println("Attempt to access uninitialized Terrain.permute");
+							e.printStackTrace();
+							System.exit(0);
+						}
+						
 						if ( // conditions for points on boundary
 								curr[0]==0 ||
 								curr[1]==0 ||
