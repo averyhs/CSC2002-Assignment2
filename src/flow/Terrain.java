@@ -4,7 +4,6 @@ import java.io.File;
 import java.awt.image.*;
 import java.awt.Color;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Terrain {
@@ -12,8 +11,6 @@ public class Terrain {
 	float [][] height; // regular grid of height values
 	int dimx, dimy; // data dimensions
 	BufferedImage img; // greyscale image for displaying the terrain top-down
-
-	ArrayList<Integer> permute;	// permuted list of integers in range [0, dimx*dimy)
 
 	// overall number of elements in the height grid
 	int dim(){
@@ -33,13 +30,6 @@ public class Terrain {
 	// get greyscale image
 	public BufferedImage getImage() {
 		return img;
-	}
-
-	// convert linear position into 2D location in grid
-	void locate(int pos, int [] ind)
-	{
-		ind[0] = (int) pos / dimy; // x
-		ind[1] = pos % dimy; // y	
 	}
 
 	// convert height values to greyscale colour and populate an image
@@ -67,28 +57,6 @@ public class Terrain {
 			}
 	}
 
-	// generate a permuted list of linear index positions to allow a random
-	// traversal over the terrain
-	void genPermute() {
-		permute = new ArrayList<Integer>();
-		for(int idx = 0; idx < dim(); idx++)
-			permute.add(idx);
-		java.util.Collections.shuffle(permute);
-	}
-
-	// find permuted 2D location from a linear index in the
-	// range [0, dimx*dimy)
-	void getPermute(int i, int [] loc) {
-		locate(permute.get(i), loc);
-	}
-	
-	// check that permute has been initialized
-	void checkPermute() throws NullPointerException {
-		if (permute == null) {
-			throw new NullPointerException();
-		}
-	}
-
 	// read in terrain from file
 	void readData(String fileName){ 
 		try{ 
@@ -109,9 +77,6 @@ public class Terrain {
 			}
 
 			sc.close(); 
-
-			// create randomly permuted list of indices for traversal 
-			genPermute(); 
 
 			// generate greyscale heightfield image
 			deriveImage();
