@@ -6,7 +6,7 @@ import java.awt.Color;
 public class Water {
 	
 	BufferedImage img;
-	int[][] depth;
+	int[][] depth; // synchronized arraylist?
 	int dimx, dimy;
 	
 	Water(Terrain land) {

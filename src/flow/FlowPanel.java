@@ -1,94 +1,69 @@
 package flow;
 
 import java.awt.Graphics;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.awt.event.MouseAdapter;
 import javax.swing.JPanel;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseAdapter;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FlowPanel extends JPanel{
-	Terrain land;
+
+	Grid grid;
+	Terrain terrain;
 	Water water;
 	
-	List<Thread> sim;
+	CyclicBarrier barrier;
 
-	static final int NUM_THREADS = 1;
-	static final int DROP_SIZE = 3;
-	static final int DROP_DEPTH = 1;
+	final static int NUM_THREADS = 1;
+	final static int DROP_DEPTH = 1;
+	final static int DROP_SIZE = 3;
+	
+	AtomicInteger count;
 
-	volatile boolean ended;
 	volatile boolean paused;
-	
-	boolean startup;
-	
-	FlowPanel(Terrain terrain) {
-		land = terrain; // get terrain
-		water = new Water(land); // initialize water
-		land.genPermute(); // generate permuted list in land
-		
-		sim = new ArrayList<Thread>();
-		
+	volatile boolean ended;
+
+	FlowPanel (Terrain t) {
+		terrain = t;
+		water = new Water (terrain);
+		grid = new Grid (NUM_THREADS, terrain.dimx, terrain.dimy);
+
 		ended = false;
-		paused = false;
+		paused = true;
 		
-		startup = true;
+		count = new AtomicInteger(0);
+
+		barrier = new CyclicBarrier(NUM_THREADS, () -> count.getAndIncrement());
 		
-		// create threads
-		for (int t=0; t<NUM_THREADS; t++) {
-			sim.add(new Thread(new Simulate(land.dim())));
+		// create and start threads
+		for (int s=0; s<NUM_THREADS; s++) {
+			Thread temp =  new Thread(new Simulate(s));
+			temp.start();
 		}
-		
+
 		// Mouse listener adds water where user clicks
-		addMouseListener(new MouseAdapter() { 
-			public void mouseClicked(MouseEvent me) { 
+		addMouseListener (new MouseAdapter() { 
+			public void mouseClicked (MouseEvent me) { 
 				try {
-					water.add(me.getX(), me.getY(), DROP_DEPTH, DROP_SIZE);
-					//water.flow(1, me.getX(), me.getY());
-					//water.color(me.getX(), me.getY());
+					water.add (me.getX(), me.getY(), DROP_DEPTH, DROP_SIZE);
 					repaint();
 				}
-				catch (ArrayIndexOutOfBoundsException err) {} // do nothing
+				catch (ArrayIndexOutOfBoundsException err) {} // Off map, do nothing
 			} 
 		});
-	}
-	
-	void end() {
-		ended = true;
-	}
-	
-	void reset() {
-		water.reset();
-		paused = true;
-		repaint();
-	}
-	
-	void pause() {
-		paused = true;
-	}
-	
-	void play() {
-		if (startup) {
-			for (Thread t : sim) {
-				t.start();
-			}
-			startup = false;
-		}
-		paused = false;
 	}
 
 	// responsible for painting the terrain and water
 	// as images
 	@Override
 	protected void paintComponent(Graphics g) {
-		int width = getWidth();
-		int height = getHeight();
-
 		super.paintComponent(g);
 
 		// draw the landscape in greyscale as an image
-		if (land.getImage() != null){
-			g.drawImage(land.getImage(), 0, 0, null);
+		if (terrain.getImage() != null){
+			g.drawImage(terrain.getImage(), 0, 0, null);
 		}
 
 		// draw water
@@ -97,55 +72,115 @@ public class FlowPanel extends JPanel{
 		}
 	}
 
+	// controls
+	void play() {
+		paused = false;
+	}
+	
+	void pause() {
+		paused = true;
+	}
+	
+	void reset() {
+		water.reset();
+		paused = true;
+		count.set(0);
+		repaint();
+	}
+	
+	void end() {
+		ended = true;
+	}
+	
+	int count() {
+		return count.get();
+	}
+
 	class Simulate implements Runnable {
 
-		int numPts; // number of points to operate on
+		int tNum; // thread number
+		int lo, hi;
+		int[] curr, next; // coords of current pt and pt water goes to
 
-		Simulate(int n) {
-			numPts = n;
+		Simulate (int t) {
+			tNum = t;
+
+			lo = (int)(t*grid.dim()/NUM_THREADS);
+			hi = (int)((t+1)*grid.dim()/NUM_THREADS);
+
+			curr = new int[2];
+			next = new int[2];
 		}
 
-		// must call genpermute first
+		@Override
 		public void run() {
 
-			// TODO: check genpermute has been called
+			while (!ended) {
 
-			int[] curr = new int[2]; // coords of this pt
-			int[] next = new int[2]; // coords of pt water goes to
-
-			while(!ended) {
 				if (paused) {
 					continue;
 				}
-				else {
-					for(int i=0; i<numPts; i++) {
-						land.getPermute(i, curr);
+				
+				System.out.println(count.get());
+				
+				for(int i=lo; i<hi; i++) {					
+					grid.getPermute(tNum, i, curr);
 
-						if ( // conditions for points on boundary
-								curr[0]==0 ||
-								curr[1]==0 ||
-								curr[0]==land.getDimX()-1 ||
-								curr[1]==land.getDimY()-1
-								) {
-							water.flow(0, curr[0], curr[1]);
-							water.color(curr[0], curr[1]);
-							continue;
-						}
-
-						if (water.depth[curr[0]][curr[1]] != 0) {
-							findLowest(curr[0], curr[1], next);
-							if (next[0]<0) continue; // no water flow
-							water.flow(-1, curr[0], curr[1]); // water out
-							water.flow(1, next[0], next[1]); // water in
-
-							// update color
-							water.color(curr[0], curr[1]);
-							water.color(next[0], next[1]);
-						}
+					if (onMapBoundary()) {
+						updateEdge();
+						repaint();
 					}
-					repaint();
+
+//					else if (onThreadBoundary()) {
+//						updateSync();
+//						repaint();
+//					}
+
+					else {
+						update();
+						repaint();
+					}
+				}
+				
+				try {
+					barrier.await();
+				} catch (InterruptedException | BrokenBarrierException err) {
+					err.printStackTrace();
 				}
 			}
+		}
+
+		void updateEdge() {
+			water.flow(0, curr[0], curr[1]);
+			water.color(curr[0], curr[1]);
+		}
+
+		void update() {
+			if (water.depth[curr[0]][curr[1]] != 0) {
+				findLowest(curr[0], curr[1], next);
+
+				if (next[0]<0) return; // no water flow
+				water.flow(-1, curr[0], curr[1]); // water out
+				water.flow(1, next[0], next[1]); // water in
+
+				// update color
+				water.color(curr[0], curr[1]);
+				water.color(next[0], next[1]);
+			}
+		}
+
+		void updateSync() {
+			// same as update() but with safety measures
+		}
+
+		boolean onMapBoundary() {
+			return curr[0]==0 || curr[1]==0 ||
+					curr[0]==grid.dimx()-1 || curr[1]==grid.dimy()-1;
+		}
+
+		boolean onThreadBoundary() {
+			int yBound = hi%grid.dimy();
+			return curr[1]==yBound || curr[1]==yBound-1 || curr[1]==yBound+1;
 		}
 
 		// find lowest neighboring point
@@ -154,18 +189,18 @@ public class FlowPanel extends JPanel{
 		private void findLowest(int x, int y, int[] c) {
 
 			// set initial min to surface of current point
-			float min = land.height[x][y] + 0.01f*water.depth[x][y];
+			float min = terrain.height[x][y] + 0.01f*water.depth[x][y];
 
 			// surrounding surface values
 			float[] s = {
-					land.height[x-1][y-1] + 0.01f*water.depth[x-1][y-1],
-					land.height[x-1][y] + 0.01f*water.depth[x-1][y],
-					land.height[x-1][y+1] + 0.01f*water.depth[x-1][y+1],
-					land.height[x][y-1] + 0.01f*water.depth[x][y-1],
-					land.height[x][y+1] + 0.01f*water.depth[x][y+1],
-					land.height[x+1][y-1] + 0.01f*water.depth[x+1][y-1],
-					land.height[x+1][y] + 0.01f*water.depth[x+1][y],
-					land.height[x+1][y+1] + 0.01f*water.depth[x+1][y+1]
+					terrain.height[x-1][y-1] + 0.01f*water.depth[x-1][y-1],
+					terrain.height[x-1][y] + 0.01f*water.depth[x-1][y],
+					terrain.height[x-1][y+1] + 0.01f*water.depth[x-1][y+1],
+					terrain.height[x][y-1] + 0.01f*water.depth[x][y-1],
+					terrain.height[x][y+1] + 0.01f*water.depth[x][y+1],
+					terrain.height[x+1][y-1] + 0.01f*water.depth[x+1][y-1],
+					terrain.height[x+1][y] + 0.01f*water.depth[x+1][y],
+					terrain.height[x+1][y+1] + 0.01f*water.depth[x+1][y+1]
 			}; // order: top to bottom, left to right
 
 			int idxMin = -1; // index in s of min value
@@ -223,7 +258,5 @@ public class FlowPanel extends JPanel{
 				break;
 			}
 		}
-
-	} // end Simulate class
-
+	} // End of Simulate class
 }
