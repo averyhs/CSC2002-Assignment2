@@ -121,23 +121,21 @@ public class FlowPanel extends JPanel{
 					continue;
 				}
 				
-				System.out.println(count.get());
-				
 				for(int i=lo; i<hi; i++) {					
 					grid.getPermute(tNum, i, curr);
 
 					if (onMapBoundary()) {
-						updateEdge();
+						water.updateEdge(curr[0], curr[1]);
 						repaint();
 					}
 
-//					else if (onThreadBoundary()) {
-//						updateSync();
-//						repaint();
-//					}
+					else if (onThreadBoundary()) {
+						water.updateS(curr[0], curr[1]);
+						repaint();
+					}
 
 					else {
-						update();
+						water.update(curr[0], curr[1]);
 						repaint();
 					}
 				}
@@ -150,29 +148,6 @@ public class FlowPanel extends JPanel{
 			}
 		}
 
-		void updateEdge() {
-			water.flow(0, curr[0], curr[1]);
-			water.color(curr[0], curr[1]);
-		}
-
-		void update() {
-			if (water.depth[curr[0]][curr[1]] != 0) {
-				findLowest(curr[0], curr[1], next);
-
-				if (next[0]<0) return; // no water flow
-				water.flow(-1, curr[0], curr[1]); // water out
-				water.flow(1, next[0], next[1]); // water in
-
-				// update color
-				water.color(curr[0], curr[1]);
-				water.color(next[0], next[1]);
-			}
-		}
-
-		void updateSync() {
-			// same as update() but with safety measures
-		}
-
 		boolean onMapBoundary() {
 			return curr[0]==0 || curr[1]==0 ||
 					curr[0]==grid.dimx()-1 || curr[1]==grid.dimy()-1;
@@ -181,82 +156,6 @@ public class FlowPanel extends JPanel{
 		boolean onThreadBoundary() {
 			int yBound = hi%grid.dimy();
 			return curr[1]==yBound || curr[1]==yBound-1 || curr[1]==yBound+1;
-		}
-
-		// find lowest neighboring point
-		// sets param c to coords of lowest pt
-		// negative values indicate that none are lower
-		private void findLowest(int x, int y, int[] c) {
-
-			// set initial min to surface of current point
-			float min = terrain.height[x][y] + 0.01f*water.depth[x][y];
-
-			// surrounding surface values
-			float[] s = {
-					terrain.height[x-1][y-1] + 0.01f*water.depth[x-1][y-1],
-					terrain.height[x-1][y] + 0.01f*water.depth[x-1][y],
-					terrain.height[x-1][y+1] + 0.01f*water.depth[x-1][y+1],
-					terrain.height[x][y-1] + 0.01f*water.depth[x][y-1],
-					terrain.height[x][y+1] + 0.01f*water.depth[x][y+1],
-					terrain.height[x+1][y-1] + 0.01f*water.depth[x+1][y-1],
-					terrain.height[x+1][y] + 0.01f*water.depth[x+1][y],
-					terrain.height[x+1][y+1] + 0.01f*water.depth[x+1][y+1]
-			}; // order: top to bottom, left to right
-
-			int idxMin = -1; // index in s of min value
-
-			// find min
-			for (int i=0; i<8; i++) {
-				if (s[i] < min) {
-					min = s[i];
-					idxMin = i;
-				}
-			}
-			/*
-			 * note:
-			 * idx should never be on terrain boundary,
-			 * because boundaries are dealt with separately in run()
-			 */
-
-			// set coords corresponding to min surface
-			switch (idxMin) {
-			case 0:
-				c[0] = x-1;
-				c[1] = y-1;
-				break;
-			case 1:
-				c[0] = x-1;
-				c[1] = y;
-				break;
-			case 2:
-				c[0] = x-1;
-				c[1] = y+1;
-				break;
-			case 3:
-				c[0] = x;
-				c[1] = y-1;
-				break;
-			case 4:
-				c[0] = x;
-				c[1] = y+1;
-				break;
-			case 5:
-				c[0] = x+1;
-				c[1] = y-1;
-				break;
-			case 6:
-				c[0] = x+1;
-				c[1] = y;
-				break;
-			case 7:
-				c[0] = x+1;
-				c[1] = y+1;
-				break;
-			default:
-				c[0] = -1;
-				c[1] = -1;
-				break;
-			}
 		}
 	} // End of Simulate class
 }
