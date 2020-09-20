@@ -9,7 +9,7 @@ public class Water {
 	int[][] depth; // synchronized arraylist?
 	int dimx, dimy;
 	
-	Water(Terrain land) {
+	Water (Terrain land) {
 		// same dimensions as terrain
 		dimx = land.getDimX();
 		dimy = land.getDimY();
@@ -25,10 +25,13 @@ public class Water {
 		return img;
 	}
 	
+	// in my code this is not concurrent, and it works fine, and
+	// if i made it concurrent, there wouldn't need to be any shared
+	// resources, so this is fine
 	void reset() {
 		// zero depth everywhere
 		// TODO: candidate for parallelization
-		for(int i=0; i<dimx; i++) {
+		for (int i=0; i<dimx; i++) {
 			for(int j=0; j<dimy; j++) {
 				depth[i][j] = 0;
 			}
@@ -41,7 +44,13 @@ public class Water {
 	// change depth at a point
 	// change param can be +ve or -ve, will be added to current depth
 	// if change is 0, depth will be set to zero.
-	void flow(int change, int x, int y) {
+	//
+	// check-act and read-modify-write here. need protection.
+	// but only for regions at the meeting of thread zones because
+	// thats the only place with concurrent access
+	//
+	// this one is for independent, unprotected access
+	void flow (int change, int x, int y) {
 		if (change==0) {
 			depth[x][y] = 0;
 		}
@@ -50,6 +59,20 @@ public class Water {
 		}
 	}
 	
+	// this one is for synchronized access
+	void flowS (int change, int x, int y) {
+		synchronized (depth) {
+			if (change==0) {
+				depth[x][y] = 0;
+			}
+			else {
+				depth[x][y] += change;
+			}
+		}
+	}
+	
+	// i didn't code this in a thread, but could be concurrent
+	// access behind the scenes?
 	void add(int x, int y, int d, int s) {
 		for (int i=-s; i<=s; i++) {
 			for (int j=-s; j<=s; j++) {
@@ -59,9 +82,12 @@ public class Water {
 		}
 	}
 	
-	void color(int x, int y) {
+	// check-act pattern with read from water. needs protection
+	//
+	// for independent, unprotected access
+	void color (int x, int y) {
 		// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
-		if(depth[x][y]==0) {
+		if (depth[x][y]==0) {
 			// Empty: A=0 R=0 G=0 B=0
 			img.setRGB(x, y, 0);
 		}
@@ -69,6 +95,21 @@ public class Water {
 			// Blue: A=255 R=0 G=0 B=255 
 			int p = (255<<24) | 255;
 			img.setRGB(x, y, p);
+		}
+	}
+	
+	// for synchronized access
+	void colorS (int x, int y) {
+		synchronized (depth) {
+			if (depth[x][y]==0) {
+				// Empty: A=0 R=0 G=0 B=0
+				img.setRGB(x, y, 0);
+			}
+			else {
+				// Blue: A=255 R=0 G=0 B=255 
+				int p = (255<<24) | 255;
+				img.setRGB(x, y, p);
+			}
 		}
 	}
 }
