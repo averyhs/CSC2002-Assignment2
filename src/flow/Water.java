@@ -7,18 +7,16 @@ public class Water {
 	
 	BufferedImage img;
 	int[][] depth; // synchronized arraylist?
-	int dimx, dimy;
+	Terrain terrain;
 	
-	Water (Terrain land) {
-		// same dimensions as terrain
-		dimx = land.getDimX();
-		dimy = land.getDimY();
+	Water (Terrain t) {
+		terrain = t;
 		
 		// filled with zeros by default
-		depth = new int[dimx][dimy];
+		depth = new int[terrain.getDimX()][terrain.getDimY()];
 		
 		// transparent image
-		img = new BufferedImage(dimx, dimy, BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(terrain.getDimX(), terrain.getDimY(), BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	BufferedImage getImage() {
@@ -31,14 +29,14 @@ public class Water {
 	void reset() {
 		// zero depth everywhere
 		// TODO: candidate for parallelization
-		for (int i=0; i<dimx; i++) {
-			for(int j=0; j<dimy; j++) {
+		for (int i=0; i<terrain.getDimX(); i++) {
+			for(int j=0; j<terrain.getDimY(); j++) {
 				depth[i][j] = 0;
 			}
 		}
 		
 		// set to transparent
-		img = new BufferedImage(dimx, dimy, BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(terrain.getDimX(), terrain.getDimY(), BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	// change depth at a point
