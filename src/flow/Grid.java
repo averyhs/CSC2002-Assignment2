@@ -53,6 +53,10 @@ class Grid {
 		locate (permute[pIdx].get(i), loc);
 	}
 	
+	int subLen() {
+		return permute[0].size();
+	}
+	
 	int dim() { return dim; }
 	
 	int dimx() { return dimx; }

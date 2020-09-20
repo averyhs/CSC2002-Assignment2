@@ -16,7 +16,7 @@ public class FlowPanel extends JPanel{
 	
 	CyclicBarrier barrier;
 
-	final static int NUM_THREADS = 1;
+	final static int NUM_THREADS = 4;
 	final static int DROP_DEPTH = 1;
 	final static int DROP_SIZE = 3;
 	
@@ -105,11 +105,11 @@ public class FlowPanel extends JPanel{
 		Simulate (int t) {
 			tNum = t;
 
-			lo = (int)(t*grid.dim()/NUM_THREADS);
-			hi = (int)((t+1)*grid.dim()/NUM_THREADS);
+			//lo = (int)(t*grid.dim()/NUM_THREADS);
+			//hi = (int)((t+1)*grid.dim()/NUM_THREADS);
 
 			curr = new int[2];
-			next = new int[2];
+			//next = new int[2];
 		}
 
 		@Override
@@ -121,7 +121,7 @@ public class FlowPanel extends JPanel{
 					continue;
 				}
 				
-				for(int i=lo; i<hi; i++) {					
+				for(int i=0; i<grid.subLen(); i++) {					
 					grid.getPermute(tNum, i, curr);
 
 					if (onMapBoundary()) {
