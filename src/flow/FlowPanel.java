@@ -24,14 +24,14 @@ public class FlowPanel extends JPanel{
 	Water water;
 	
 	CyclicBarrier barrier;
-
+	
 	final static int NUM_THREADS = 4;
 	final static int DROP_DEPTH = 1;
 	final static int DROP_SIZE = 3;
 	
 	AtomicInteger count;
 	JLabel countL;
-
+	
 	volatile boolean paused;
 	volatile boolean ended;
 
@@ -105,6 +105,12 @@ public class FlowPanel extends JPanel{
 	
 	void pause() {
 		paused = true;
+		System.out.println("-----------------------------------------------------------------------------------");
+		System.out.println("water added: "+water.waterAdded());
+		System.out.println("water removed: "+water.waterRemoved());
+		System.out.println("(water added) - (water removed): " + (water.waterAdded()-water.waterRemoved()));
+		System.out.println("water count: "+water.waterCount());
+		System.out.println("-----------------------------------------------------------------------------------");
 	}
 	
 	void reset() {

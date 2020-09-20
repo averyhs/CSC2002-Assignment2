@@ -1,6 +1,7 @@
 package flow;
 
 import java.awt.image.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.awt.Color;
 
 public class Water {
@@ -9,8 +10,16 @@ public class Water {
 	int[][] depth; // synchronized arraylist?
 	Terrain terrain;
 	
+	AtomicInteger waterAdded;
+	AtomicInteger waterRemoved;
+	AtomicInteger waterCount;
+	
 	Water (Terrain t) {
 		terrain = t;
+		
+		waterAdded = new AtomicInteger(0);
+		waterRemoved = new AtomicInteger(0);
+		waterCount = new AtomicInteger(0);
 		
 		// filled with zeros by default
 		depth = new int[terrain.getDimX()][terrain.getDimY()];
@@ -23,6 +32,24 @@ public class Water {
 		return img;
 	}
 	
+	int waterAdded() { return waterAdded.get(); }
+	int waterRemoved() { return waterRemoved.get(); }
+	int waterCount() {
+		synchronized (depth) {
+			waterCount.set(0);
+			for (int i=0; i<terrain.getDimX(); i++) {
+				for(int j=0; j<terrain.getDimY(); j++) {
+					if (depth[i][j] > 0) {
+						for (int d=0; d<depth[i][j]; d++) {
+							waterCount.getAndIncrement();
+						}
+					}
+				}
+			}
+			return waterCount.get();
+		}
+	}
+	
 	// in my code this is not concurrent, and it works fine, and
 	// if i made it concurrent, there wouldn't need to be any shared
 	// resources, so this is fine
@@ -31,6 +58,12 @@ public class Water {
 		// TODO: candidate for parallelization
 		for (int i=0; i<terrain.getDimX(); i++) {
 			for(int j=0; j<terrain.getDimY(); j++) {
+				if (depth[i][j] > 0) {
+					for (int d=0; d<depth[i][j]; d++) {
+						waterRemoved.getAndIncrement();
+					}
+				}
+				
 				depth[i][j] = 0;
 			}
 		}
@@ -76,6 +109,10 @@ public class Water {
 			for (int j=-s; j<=s; j++) {
 				depth[x+i][y+j] = d;
 				color(x+i,y+j);
+				
+				for (int a=0; a<d; a++) {
+					waterAdded.getAndIncrement();
+				}
 			}
 		}
 	}
@@ -112,6 +149,12 @@ public class Water {
 	}
 	
 	void updateEdge(int x, int y) {
+		if (depth[x][y] > 0) {
+			for (int i=0; i<depth[x][y]; i++) {
+				waterRemoved.getAndIncrement();
+			}
+		}
+		
 		flow(0, x, y);
 		color(x, y);
 	}
