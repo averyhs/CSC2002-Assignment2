@@ -1,12 +1,21 @@
 package flow;
 
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.awt.color.*;
 
 public class FlowPanel extends JPanel{
 
@@ -21,11 +30,14 @@ public class FlowPanel extends JPanel{
 	final static int DROP_SIZE = 3;
 	
 	AtomicInteger count;
+	JLabel countL;
 
 	volatile boolean paused;
 	volatile boolean ended;
 
 	FlowPanel (Terrain t) {
+		this.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		
 		terrain = t;
 		water = new Water (terrain);
 		grid = new Grid (NUM_THREADS, terrain.dimx, terrain.dimy);
@@ -34,8 +46,17 @@ public class FlowPanel extends JPanel{
 		paused = true;
 		
 		count = new AtomicInteger(0);
+		
+		countL = new JLabel("0",10);
+		countL.setOpaque(true);
+		countL.setBackground(Color.lightGray);
+		countL.setBorder(BorderFactory.createEmptyBorder(1,2,1,2));
+		this.add(countL);
 
-		barrier = new CyclicBarrier(NUM_THREADS, () -> count.getAndIncrement());
+		barrier = new CyclicBarrier(NUM_THREADS, () -> {
+			count.getAndIncrement();
+			countL.setText(String.valueOf(count.get()));
+			});
 		
 		// create and start threads
 		for (int s=0; s<NUM_THREADS; s++) {
@@ -60,7 +81,7 @@ public class FlowPanel extends JPanel{
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-
+		
 		// draw the landscape in greyscale as an image
 		if (terrain.getImage() != null){
 			g.drawImage(terrain.getImage(), 0, 0, null);
@@ -70,6 +91,11 @@ public class FlowPanel extends JPanel{
 		if (water.getImage() != null){
 			g.drawImage(water.getImage(), 0, 0, null);
 		}
+	}
+	
+	@Override
+	protected void paintChildren(Graphics g) {
+		super.paintChildren(g);
 	}
 
 	// controls
@@ -82,18 +108,21 @@ public class FlowPanel extends JPanel{
 	}
 	
 	void reset() {
-		water.reset();
 		paused = true;
+		water.reset();
+		repaint();
+		
+		// Wait so threads don't rewrite countL
+		try { Thread.sleep(100); }
+		catch (InterruptedException err) { err.printStackTrace(); }
+		
 		count.set(0);
+		countL.setText("0");
 		repaint();
 	}
 	
 	void end() {
 		ended = true;
-	}
-	
-	int count() {
-		return count.get();
 	}
 
 	class Simulate implements Runnable {
