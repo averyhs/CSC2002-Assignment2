@@ -4,26 +4,44 @@ import java.io.File;
 import java.awt.image.*;
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Terrain {
 
 	float [][] height; // regular grid of height values
-	int dimx, dimy; // data dimensions
+	int dimx, dimy, dim; // data dimensions
 	BufferedImage img; // greyscale image for displaying the terrain top-down
 
+	// Immutable
+	private int n; // number of threads
+	private List<Integer>[] permute;
+	
+	Terrain(String filepath, int numThreads) {
+		readData(filepath);
+		dim = dimx*dimy;
+		n = numThreads;
+		
+		/* I use this in a private method that only adds the correct
+		 * type, so i'll just suppress this warning 
+		 */
+		permute = new List[n];
+		genPermute();
+	}
+	
 	// overall number of elements in the height grid
 	int dim(){
 		return dimx*dimy;
 	}
 
 	// get x-dimensions (number of columns)
-	int getDimX(){
+	int dimx(){
 		return dimx;
 	}
 
 	// get y-dimensions (number of rows)
-	int getDimY(){
+	int dimy(){
 		return dimy;
 	}
 
@@ -31,6 +49,37 @@ public class Terrain {
 	public BufferedImage getImage() {
 		return img;
 	}
+	
+	// convert linear position into 2D location in grid
+		// don't need protection here because nothing is changed concurrently
+		void locate (int pos, int [] ind)
+		{
+			ind[0] = (int)(pos/dimy); // x
+			ind[1] = pos%dimy; // y	
+		}
+
+		// generate permuted lists of linear index positions to allow a random
+		// traversal over the terrain
+		// slower setup, faster play
+		void genPermute() {
+			for (int i=0; i<n; i++) {
+				permute[i] = new ArrayList<Integer>();
+				for (int idx=(int)(i*dim/n); idx<(int)((i+1)*dim/n); idx++) {
+					permute[i].add (idx);
+				}
+				java.util.Collections.shuffle (permute[i]);
+			}
+		}
+
+		// find permuted 2D location from a linear index in the
+		// range [0, dimx*dimy)
+		void getPermute (int pIdx, int i, int [] loc) {
+			locate (permute[pIdx].get(i), loc);
+		}
+		
+		int subLen() {
+			return permute[0].size();
+		}
 
 	// convert height values to greyscale colour and populate an image
 	void deriveImage()

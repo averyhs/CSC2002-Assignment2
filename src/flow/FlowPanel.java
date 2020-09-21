@@ -2,6 +2,7 @@ package flow;
 
 import java.awt.FlowLayout;
 import java.awt.Graphics;
+import java.awt.Color;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -31,7 +32,6 @@ public class FlowPanel extends JPanel{
 	// ========
 
 	// Data
-	Grid grid;
 	Terrain terrain;
 	Water water;
 
@@ -78,10 +78,8 @@ public class FlowPanel extends JPanel{
 		// ===================
 		//  Terrain and Water
 		// ===================
-		terrain = new Terrain();
-		terrain.readData(dataFile);
-		water = new Water (terrain);
-		grid = new Grid (NUM_THREADS, terrain.dimx, terrain.dimy);
+		terrain = new Terrain(dataFile, NUM_THREADS);
+		water = new Water(terrain);
 
 		// =========
 		//  Threads
@@ -133,7 +131,7 @@ public class FlowPanel extends JPanel{
 	 * @return grid x-dimension
 	 */
 	int dimx() {
-		return grid.dimx();
+		return terrain.dimx();
 	}
 
 	/**
@@ -143,7 +141,7 @@ public class FlowPanel extends JPanel{
 	 * @return grid y-dimension
 	 */
 	int dimy() {
-		return grid.dimy();
+		return terrain.dimy();
 	}
 
 	// ==========
@@ -277,9 +275,9 @@ public class FlowPanel extends JPanel{
 				}
 
 				// Loop over a quarter of the grid (assuming 4 threads)
-				for(int i=0; i<grid.subLen(); i++) {
+				for(int i=0; i<terrain.subLen(); i++) {
 					// Get coords of point to consider
-					grid.getPermute(tNum, i, coords);
+					terrain.getPermute(tNum, i, coords);
 
 					if (onMapBoundary()) {
 						// Run off edge
@@ -316,7 +314,7 @@ public class FlowPanel extends JPanel{
 		boolean onMapBoundary() {
 			// Min and max values of x and y
 			return coords[0]==0 || coords[1]==0 ||
-					coords[0]==grid.dimx()-1 || coords[1]==grid.dimy()-1;
+					coords[0]==terrain.dimx()-1 || coords[1]==terrain.dimy()-1;
 		}
 
 		/**
@@ -334,7 +332,7 @@ public class FlowPanel extends JPanel{
 			 * by (tNum+1) selects the end of this thread's zone. %grid.dimy() gets the 
 			 * row number.
 			 */
-			int bound = ((tNum+1)*grid.dim()/NUM_THREADS)%grid.dimy();
+			int bound = ((tNum+1)*terrain.dim()/NUM_THREADS)%terrain.dimy();
 			return coords[1]==bound || coords[1]==bound-1 || coords[1]==bound+1;
 		}
 	} // End of Simulate class

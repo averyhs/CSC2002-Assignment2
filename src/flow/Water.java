@@ -2,7 +2,6 @@ package flow;
 
 import java.awt.image.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.awt.Color;
 
 public class Water {
 	
@@ -22,10 +21,10 @@ public class Water {
 		waterCount = new AtomicInteger(0);
 		
 		// filled with zeros by default
-		depth = new int[terrain.getDimX()][terrain.getDimY()];
+		depth = new int[terrain.dimx()][terrain.dimy()];
 		
 		// transparent image
-		img = new BufferedImage(terrain.getDimX(), terrain.getDimY(), BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(terrain.dimx(), terrain.dimy(), BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	BufferedImage getImage() {
@@ -37,8 +36,8 @@ public class Water {
 	int waterCount() {
 		synchronized (depth) {
 			waterCount.set(0);
-			for (int i=0; i<terrain.getDimX(); i++) {
-				for(int j=0; j<terrain.getDimY(); j++) {
+			for (int i=0; i<terrain.dimx(); i++) {
+				for(int j=0; j<terrain.dimy(); j++) {
 					if (depth[i][j] > 0) {
 						for (int d=0; d<depth[i][j]; d++) {
 							waterCount.getAndIncrement();
@@ -56,8 +55,8 @@ public class Water {
 	void reset() {
 		// zero depth everywhere
 		// TODO: candidate for parallelization
-		for (int i=0; i<terrain.getDimX(); i++) {
-			for(int j=0; j<terrain.getDimY(); j++) {
+		for (int i=0; i<terrain.dimx(); i++) {
+			for(int j=0; j<terrain.dimy(); j++) {
 				if (depth[i][j] > 0) {
 					for (int d=0; d<depth[i][j]; d++) {
 						waterRemoved.getAndIncrement();
@@ -69,7 +68,7 @@ public class Water {
 		}
 		
 		// set to transparent
-		img = new BufferedImage(terrain.getDimX(), terrain.getDimY(), BufferedImage.TYPE_INT_ARGB);
+		img = new BufferedImage(terrain.dimx(), terrain.dimy(), BufferedImage.TYPE_INT_ARGB);
 	}
 	
 	// change depth at a point
