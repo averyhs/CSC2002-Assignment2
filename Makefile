@@ -19,8 +19,9 @@ ${BINDIR}/%.class: ${SRCDIR}/%.java
 
 # Build dependency rules
 ${BINDIR}/${PKG}.Terrain.class: ${SRCDIR}/${PKG}.Terrain.java
-${BINDIR}/${PKG}.FlowPanel.class: ${SRCDIR}/${PKG}.FlowPanel.java ${BINDIR}/${PKG}.Terrain.class
-${BINDIR}/${PKG}.Flow.class: ${SRCDIR}/${PKG}.Flow.java ${BINDIR}/${PKG}.FlowPanel.class ${BINDIR}/${PKG}.Terrain.class
+${BINDIR}/${PKG}.Water.class: ${SRCDIR}/${PKG}.Water.java ${BINDIR}/${PKG}.Terrain.class
+${BINDIR}/${PKG}.FlowPanel.class: ${SRCDIR}/${PKG}.FlowPanel.java ${BINDIR}/${PKG}.Terrain.class ${BINDIR}/${PKG}.Water.class
+${BINDIR}/${PKG}.Flow.class: ${SRCDIR}/${PKG}.Flow.java ${BINDIR}/${PKG}.FlowPanel.class
 
 all: clean clean-docs compile docs
 
