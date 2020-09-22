@@ -3,7 +3,10 @@
 .classpath
 
 # Class files
-bin/*
+bin/
 
 # IO files
-io-files/*
+io-files/
+
+# Javadoc files
+doc/
