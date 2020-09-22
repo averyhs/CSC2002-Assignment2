@@ -102,17 +102,18 @@ public class Flow {
 		b.setLayout(new BoxLayout(b, BoxLayout.LINE_AXIS));
 
 		// Add buttons to panel
-		b.add(Box.createHorizontalGlue());
 		b.add(resetB);
-		b.add(Box.createHorizontalGlue());
+		b.add(Box.createRigidArea(new Dimension(10,0)));
 		b.add(pauseB);
-		b.add(Box.createHorizontalGlue());
+		b.add(Box.createRigidArea(new Dimension(10,0)));
 		b.add(playB);
-		b.add(Box.createHorizontalGlue());
+		b.add(Box.createRigidArea(new Dimension(10,0)));
 		b.add(endB);
-		b.add(Box.createHorizontalGlue());
+		// https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html#filler
 
+		
 		g.add(b);
+		
 
 		// =============
 		//  Frame setup
