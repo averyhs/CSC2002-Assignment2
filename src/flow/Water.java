@@ -135,9 +135,8 @@ public class Water {
 			h = MAX_HUE;
 		}
 		
-		// Use s=95, b=75
-		int rgb = Color.HSBtoRGB(h, 0.95f, 0.75f);
-		Color myColor = new Color(rgb);
+		// Use s=100, b=75
+		int rgb = Color.HSBtoRGB(h, 1f, 0.75f);
 		
 		// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
 		if (depth[x][y]==0) {

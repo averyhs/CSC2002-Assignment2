@@ -37,7 +37,7 @@ public class FlowPanel extends JPanel{
 
 	// Constants
 	final static int NUM_THREADS = 4;
-	final static int DROP_DEPTH = 1;
+	final static int DROP_DEPTH = 3;
 	final static int DROP_SIZE = 3;
 
 	// Count
