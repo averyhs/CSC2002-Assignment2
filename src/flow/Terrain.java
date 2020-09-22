@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Locale;
 
 public class Terrain {
 
@@ -160,7 +161,9 @@ public class Terrain {
 	void readData(String fileName){ 
 		try{ 
 			Scanner sc = new Scanner(new File(fileName));
-
+			// Specify locale so that interpretation of decimal point is the same on all machines
+			sc.useLocale(Locale.US);
+			
 			/* Read grid dimensions
 			 * x and y correpond to columns and rows, respectively.
 			 * Using image coordinate system where top left is (0,0).
