@@ -95,8 +95,10 @@ public class FlowPanel extends JPanel{
 		 * the barrier (lambda expression is for Runnable interface)
 		 */
 		barrier = new CyclicBarrier(NUM_THREADS, () -> {
-			count.getAndIncrement();
-			countL.setText(String.valueOf(count.get()));
+			if(!paused) {
+				count.getAndIncrement();
+				countL.setText(String.valueOf(count.get()));
+			}
 		});
 
 		// Create and start threads
@@ -215,14 +217,8 @@ public class FlowPanel extends JPanel{
 	void reset() {
 		paused = true;
 		water.reset();
-		repaint();
-
-		// Wait so threads don't rewrite countL
-		try { Thread.sleep(100); }
-		catch (InterruptedException err) { err.printStackTrace(); }
-
 		count.set(0);
-		countL.setText("0");
+		countL.setText(String.valueOf(count.get()));
 		repaint();
 	}
 
