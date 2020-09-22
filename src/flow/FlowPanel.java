@@ -285,18 +285,36 @@ public class FlowPanel extends JPanel{
 							water.updateEdge(coords[0], coords[1]);
 						}
 						repaint();
+						
+						/* Yield time on processor to other threads.
+						 * Increases interleaving, so more chance of race condition.
+						 * Uncomment for debugging.
+						 */
+						Thread.yield();
 					}
 
 					else if (onThreadBoundary()) {
 						// Check & transfer water with mutual exclusion
 						water.updateS(coords[0], coords[1]);
 						repaint();
+						
+						/* Yield time on processor to other threads.
+						 * Increases interleaving, so more chance of race condition.
+						 * Uncomment for debugging.
+						 */
+						Thread.yield();
 					}
 
 					else {
 						// Check & transfer water (no mutual exclusion)
 						water.update(coords[0], coords[1]);
 						repaint();
+						
+						/* Yield time on processor to other threads.
+						 * Increases interleaving, so more chance of race condition.
+						 * Uncomment for debugging.
+						 */
+						Thread.yield();
 					}
 				}
 
