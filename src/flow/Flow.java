@@ -32,9 +32,7 @@ public class Flow {
 	 * <p>Components of the GUI are a frame, with a panel for {@link FlowPanel}
 	 * and a panel for buttons.</p>
 	 * 
-	 * @param frameX Width of frame
-	 * @param frameY Height of frame
-	 * @param landdata Terrain data to give to <code>FlowPanel</code>
+	 * @param dataFile Path to file containing terrain data
 	 */
 	public static void setupGUI(String dataFile) {
 

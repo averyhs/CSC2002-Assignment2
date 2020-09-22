@@ -38,7 +38,7 @@ public class FlowPanel extends JPanel{
 
 	// Constants
 	final static int NUM_THREADS = 4;
-	final static int DROP_DEPTH = 3;
+	final static int DROP_DEPTH = 2;
 	final static int DROP_SIZE = 3;
 
 	// Count
@@ -55,10 +55,13 @@ public class FlowPanel extends JPanel{
 	// =============
 
 	/**
-	 * <p><code>FlowPanel</code> constructor.</p>
-	 * <p>Initializes data, counter, threads, and mouse listener.</p>s
+	 * <p>Initializes data, counter, threads, and mouse listener.</p>
+	 * <p>Creates a label for counter and sets its properties.<br>
+	 * Sets a cyclic barrier for the {@link Simulate} threads, defines
+	 * actions to be taken when tripped.<br>
+	 * Defines actions for mouse click (Add water).</p>
 	 * 
-	 * @param t Terrain object for simulation
+	 * @param dataFile Path to file containing terrain data
 	 */
 	FlowPanel (String dataFile) {
 
@@ -103,7 +106,7 @@ public class FlowPanel extends JPanel{
 		});
 
 		// Create and start threads
-		for (int s=0; s<NUM_THREADS; s++) {
+		for(int s=0; s<NUM_THREADS; s++) {
 			Thread temp =  new Thread(new Simulate(s));
 			temp.start();
 		}
@@ -118,7 +121,7 @@ public class FlowPanel extends JPanel{
 					water.add(me.getX(), me.getY(), DROP_DEPTH, DROP_SIZE);
 					repaint();
 				}
-				catch (ArrayIndexOutOfBoundsException err) {} // Off map, do nothing
+				catch(ArrayIndexOutOfBoundsException err) {} // Off map, do nothing
 			}
 		});
 	}
@@ -200,8 +203,9 @@ public class FlowPanel extends JPanel{
 	void pause() {
 		paused = true;
 
-		// Water conservation testing    |
-		// Uncomment                     v
+		/* Water conservation testing    |
+		 * Uncomment for debugging       v
+		 */
 		//System.out.println("+------------------------------------------------+");
 		//System.out.println(" water added: "+water.waterAdded());
 		//System.out.println(" water removed: "+water.waterRemoved());
@@ -276,9 +280,9 @@ public class FlowPanel extends JPanel{
 					// Get coords of point to consider
 					terrain.getPermute(tNum, i, coords);
 
-					if (onMapBoundary()) {
+					if(onMapBoundary()) {
 						// Run off edge
-						if (onThreadBoundary()) {
+						if(onThreadBoundary()) {
 							water.updateEdgeS(coords[0], coords[1]);
 						}
 						else {
@@ -290,10 +294,10 @@ public class FlowPanel extends JPanel{
 						 * Increases interleaving, so more chance of race condition.
 						 * Uncomment for debugging.
 						 */
-						Thread.yield();
+						//Thread.yield();
 					}
 
-					else if (onThreadBoundary()) {
+					else if(onThreadBoundary()) {
 						// Check & transfer water with mutual exclusion
 						water.updateS(coords[0], coords[1]);
 						repaint();
@@ -302,7 +306,7 @@ public class FlowPanel extends JPanel{
 						 * Increases interleaving, so more chance of race condition.
 						 * Uncomment for debugging.
 						 */
-						Thread.yield();
+						//Thread.yield();
 					}
 
 					else {
@@ -314,13 +318,14 @@ public class FlowPanel extends JPanel{
 						 * Increases interleaving, so more chance of race condition.
 						 * Uncomment for debugging.
 						 */
-						Thread.yield();
+						//Thread.yield();
 					}
 				}
 
 				try {
 					barrier.await(); // Trip barrier
-				} catch (InterruptedException | BrokenBarrierException err) {
+				}
+				catch(InterruptedException | BrokenBarrierException err) {
 					System.out.println("Error at cyclic barrier");
 					err.printStackTrace();
 				}
