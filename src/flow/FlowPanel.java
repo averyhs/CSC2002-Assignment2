@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <p>Panel that manages the simulation.</p>
- * 
+ * <p>This is a Controller class (of the MVC design pattern).
+ * It determines what data is displayed and how it is displayed.</p>
  * @author avk
  */
 public class FlowPanel extends JPanel{

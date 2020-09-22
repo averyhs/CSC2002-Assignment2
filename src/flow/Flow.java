@@ -111,9 +111,7 @@ public class Flow {
 		b.add(endB);
 		// https://docs.oracle.com/javase/tutorial/uiswing/layout/box.html#filler
 
-		
 		g.add(b);
-		
 
 		// =============
 		//  Frame setup
