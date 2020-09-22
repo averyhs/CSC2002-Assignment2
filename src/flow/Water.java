@@ -7,7 +7,7 @@ import java.awt.Color;
 public class Water {
 	
 	BufferedImage img;
-	int[][] depth; // synchronized arraylist?
+	int[][] depth;
 	Terrain terrain;
 	
 	AtomicInteger waterAdded;
@@ -153,31 +153,7 @@ public class Water {
 	// for synchronized access
 	void colorS (int x, int y) {
 		synchronized (depth) {
-			int maxDepth = 6; // Deepest in hue range, shallowest is 1
-			float h; // hue
-			
-			// Calculate Hue value for this point
-			if(depth[x][y] <= maxDepth) {
-				h = (MAX_HUE - MIN_HUE)*(depth[x][y] - 1)/(maxDepth - 1) + MIN_HUE;
-			}
-			else {
-				h = MAX_HUE;
-			}
-			
-			// Use s=95, b=75
-			int rgb = Color.HSBtoRGB(h, 0.95f, 0.75f);
-			Color myColor = new Color(rgb);
-			
-			// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
-			if (depth[x][y]==0) {
-				// Empty: A=0 R=0 G=0 B=0
-				img.setRGB(x, y, 0);
-			}
-			else {
-				// Blue: A=255 RGB as calculated
-				int p = (255<<24) | rgb;
-				img.setRGB(x, y, p);
-			}
+			color(x,y);
 		}
 	}
 	
@@ -190,6 +166,12 @@ public class Water {
 		
 		flow(0, x, y);
 		color(x, y);
+	}
+	
+	void updateEdgeS(int x, int y) {
+		synchronized (depth) {
+			updateEdge(x,y);
+		}
 	}
 	
 	void update(int x, int y) {
@@ -209,19 +191,19 @@ public class Water {
 	}
 	
 	void updateS(int x, int y) {
-		int[] nextPt = new int[2];
-		
 		synchronized (depth) {
+			int[] nextPt = new int[2];
+			
 			if (depth[x][y] != 0) {
 				findLowestS(x, y, nextPt);
 
 				if (nextPt[0]<0) { return; } // no water flow
-				flowS(-1, x, y); // water out
-				flowS(1, nextPt[0], nextPt[1]); // water in
+				flow(-1, x, y); // water out
+				flow(1, nextPt[0], nextPt[1]); // water in
 
 				// update color
-				colorS(x, y);
-				colorS(nextPt[0], nextPt[1]);
+				color(x, y);
+				color(nextPt[0], nextPt[1]);
 			}
 		}
 	}
@@ -307,75 +289,7 @@ public class Water {
 	// negative values indicate that none are lower
 	private void findLowestS(int x, int y, int[] c) {
 		synchronized (depth) {
-			// set initial min to surface of current point
-			float min = terrain.height[x][y] + 0.01f*depth[x][y];
-
-			// surrounding surface values
-			float[] s = {
-					terrain.height[x-1][y-1] + 0.01f*depth[x-1][y-1],
-					terrain.height[x-1][y] + 0.01f*depth[x-1][y],
-					terrain.height[x-1][y+1] + 0.01f*depth[x-1][y+1],
-					terrain.height[x][y-1] + 0.01f*depth[x][y-1],
-					terrain.height[x][y+1] + 0.01f*depth[x][y+1],
-					terrain.height[x+1][y-1] + 0.01f*depth[x+1][y-1],
-					terrain.height[x+1][y] + 0.01f*depth[x+1][y],
-					terrain.height[x+1][y+1] + 0.01f*depth[x+1][y+1]
-			}; // order: top to bottom, left to right
-
-			int idxMin = -1; // index in s of min value
-
-			// find min
-			for (int i=0; i<8; i++) {
-				if (s[i] < min) {
-					min = s[i];
-					idxMin = i;
-				}
-			}
-			/*
-			 * note:
-			 * idx should never be on terrain boundary,
-			 * because boundaries are dealt with separately in run()
-			 */
-
-			// set coords corresponding to min surface
-			switch (idxMin) {
-			case 0:
-				c[0] = x-1;
-				c[1] = y-1;
-				break;
-			case 1:
-				c[0] = x-1;
-				c[1] = y;
-				break;
-			case 2:
-				c[0] = x-1;
-				c[1] = y+1;
-				break;
-			case 3:
-				c[0] = x;
-				c[1] = y-1;
-				break;
-			case 4:
-				c[0] = x;
-				c[1] = y+1;
-				break;
-			case 5:
-				c[0] = x+1;
-				c[1] = y-1;
-				break;
-			case 6:
-				c[0] = x+1;
-				c[1] = y;
-				break;
-			case 7:
-				c[0] = x+1;
-				c[1] = y+1;
-				break;
-			default:
-				c[0] = -1;
-				c[1] = -1;
-				break;
-			}
+			findLowest(x,y,c);
 		}
 	}
 }

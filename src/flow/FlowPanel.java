@@ -278,7 +278,12 @@ public class FlowPanel extends JPanel{
 
 					if (onMapBoundary()) {
 						// Run off edge
-						water.updateEdge(coords[0], coords[1]);
+						if (onThreadBoundary()) {
+							water.updateEdgeS(coords[0], coords[1]);
+						}
+						else {
+							water.updateEdge(coords[0], coords[1]);
+						}
 						repaint();
 					}
 
