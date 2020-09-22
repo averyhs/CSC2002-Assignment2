@@ -2,6 +2,7 @@ package flow;
 
 import java.awt.image.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.awt.Color;
 
 public class Water {
 	
@@ -12,6 +13,9 @@ public class Water {
 	AtomicInteger waterAdded;
 	AtomicInteger waterRemoved;
 	AtomicInteger waterCount;
+	
+	final static float MAX_HUE = 234f/360f;
+	final static float MIN_HUE = 196f/360f;
 	
 	Water (Terrain t) {
 		terrain = t;
@@ -120,14 +124,29 @@ public class Water {
 	//
 	// for independent, unprotected access
 	void color (int x, int y) {
+		int maxDepth = 6; // Deepest in hue range, shallowest is 1
+		float h; // hue
+		
+		// Calculate Hue value for this point
+		if(depth[x][y] <= maxDepth) {
+			h = (MAX_HUE - MIN_HUE)*(depth[x][y] - 1)/(maxDepth - 1) + MIN_HUE;
+		}
+		else {
+			h = MAX_HUE;
+		}
+		
+		// Use s=95, b=75
+		int rgb = Color.HSBtoRGB(h, 0.95f, 0.75f);
+		Color myColor = new Color(rgb);
+		
 		// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
 		if (depth[x][y]==0) {
 			// Empty: A=0 R=0 G=0 B=0
 			img.setRGB(x, y, 0);
 		}
 		else {
-			// Blue: A=255 R=0 G=0 B=255 
-			int p = (255<<24) | 255;
+			// Blue: A=255 RGB as calculated
+			int p = (255<<24) | rgb;
 			img.setRGB(x, y, p);
 		}
 	}
@@ -135,13 +154,29 @@ public class Water {
 	// for synchronized access
 	void colorS (int x, int y) {
 		synchronized (depth) {
+			int maxDepth = 6; // Deepest in hue range, shallowest is 1
+			float h; // hue
+			
+			// Calculate Hue value for this point
+			if(depth[x][y] <= maxDepth) {
+				h = (MAX_HUE - MIN_HUE)*(depth[x][y] - 1)/(maxDepth - 1) + MIN_HUE;
+			}
+			else {
+				h = MAX_HUE;
+			}
+			
+			// Use s=95, b=75
+			int rgb = Color.HSBtoRGB(h, 0.95f, 0.75f);
+			Color myColor = new Color(rgb);
+			
+			// https://dyclassroom.com/image-processing-project/how-to-get-and-set-pixel-value-in-java
 			if (depth[x][y]==0) {
 				// Empty: A=0 R=0 G=0 B=0
 				img.setRGB(x, y, 0);
 			}
 			else {
-				// Blue: A=255 R=0 G=0 B=255 
-				int p = (255<<24) | 255;
+				// Blue: A=255 RGB as calculated
+				int p = (255<<24) | rgb;
 				img.setRGB(x, y, p);
 			}
 		}
